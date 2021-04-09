@@ -10,6 +10,7 @@ public:
     ParamsWatcher(){};
     static void update();
     static list<ParamsWatcher *> watchers;
+
 private:
     virtual void _update() = 0;
 };
@@ -33,12 +34,26 @@ private:
     T _obj_saved;
     T &_obj;
     void (*_callback)(T);
+    bool _changed()
+    {
+        for (int i = 0; i < sizeof(T); i++)
+        {
+            if (((char *)&_obj_saved)[i] != ((char *)&_obj)[i])
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     void _update()
     {
-        if (_obj != _obj_saved and _callback)
+        if (_callback and _changed())
         {
             _callback(_obj);
-            _obj_saved = _obj;
+            for (int i = 0; i < sizeof(T); i++)
+            {
+                ((char *)&_obj_saved)[i] = ((char *)&_obj)[i];
+            }
         }
     }
 };
