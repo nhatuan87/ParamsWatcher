@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Arduino.h>
 #include <list>
 
 using namespace std;
@@ -7,7 +8,10 @@ using namespace std;
 class ParamsWatcher
 {
 public:
-    ParamsWatcher(){};
+    ParamsWatcher()
+    {
+        watchers.push_back(this);
+    };
     static void update();
     static list<ParamsWatcher *> watchers;
 
@@ -20,10 +24,7 @@ class Watcher : public ParamsWatcher
 {
 public:
     Watcher(T &obj)
-        : _obj(obj)
-    {
-        watchers.push_back(this);
-    }
+        : ParamsWatcher(), _obj(obj) {}
 
     void setCallback(void (*callback)(T))
     {
@@ -49,11 +50,40 @@ private:
     {
         if (_callback and _changed())
         {
-            _callback(_obj);
             for (int i = 0; i < sizeof(T); i++)
             {
                 ((char *)&_obj_saved)[i] = ((char *)&_obj)[i];
             }
+            _callback(_obj);
+        }
+    }
+};
+
+class TimeWatcher : public ParamsWatcher
+{
+public:
+    TimeWatcher() : ParamsWatcher() {}
+
+    void setCallback(void (*callback)(), unsigned int period = 1)
+    {
+        _callback = callback;
+        _period = period;
+    }
+
+private:
+    unsigned int _period;
+    unsigned long _time_saved;
+    void (*_callback)();
+    bool _changed()
+    {
+        return _time_saved != (millis() / _period);
+    }
+    void _update()
+    {
+        if (_callback and _changed())
+        {
+            _time_saved = millis() / _period;
+            _callback();
         }
     }
 };
