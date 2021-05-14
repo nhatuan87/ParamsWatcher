@@ -76,6 +76,9 @@ private:
     void (*_callback)();
     bool _changed()
     {
+        if (_period == 0) {
+            return false;
+        }
         return _time_saved != (millis() / _period);
     }
     void _update()
