@@ -30,6 +30,13 @@ public:
     {
         _callback = callback;
     }
+    void reset()
+    {
+        for (int i = 0; i < sizeof(T); i++)
+        {
+            ((char *)&_obj_saved)[i] = ((char *)&_obj)[i];
+        }
+    }
 
 private:
     T _obj_saved;
